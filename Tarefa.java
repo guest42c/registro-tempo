@@ -5,7 +5,6 @@ import java.util.List;
 public class Tarefa {
     private Tipo tipo;
     private String titulo = "Título";
-    private Atividade atividade;
     private boolean trabalhando = false;
     private Registro atual;
 
@@ -76,14 +75,6 @@ public class Tarefa {
 
     public void setTipo(Tipo tipo) {
         this.tipo = tipo;
-    }
-
-    public void setAtividade(Atividade atividade) {
-        this.atividade = atividade;
-    }
-
-    public Atividade getAtividade() {
-        return atividade;
     }
 
     private void setTrabalhando(boolean trabalhando) {
