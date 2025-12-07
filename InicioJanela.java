@@ -17,6 +17,7 @@ import java.util.TimerTask;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
@@ -52,9 +53,26 @@ public class InicioJanela extends JFrame implements ActionListener, MouseListene
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent we) {
-                System.exit(0);
+                confirmarFechamento();
             }
         });
+    }
+
+    private void confirmarFechamento() {
+        int resposta = JOptionPane.showConfirmDialog(
+            this,
+            "Tem certeza que deseja sair do sistema?",
+            "Confirmação de Saída",
+            JOptionPane.YES_NO_OPTION,
+            JOptionPane.QUESTION_MESSAGE
+        );
+
+        if (resposta == JOptionPane.YES_OPTION) {
+            // Se o usuário clicar em SIM, o sistema encerra.
+            dispose(); // Fecha a janela
+            // System.exit(0); // Opcional: Encerra toda a aplicação Java
+        }
+        // Se o usuário clicar em NÃO, a janela permanece aberta.
     }
 
     public void criaJanela() {
@@ -102,7 +120,7 @@ public class InicioJanela extends JFrame implements ActionListener, MouseListene
 
         atualizarTela();
 
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         setSize(800, 500);
         setVisible(true);
     }
