@@ -244,7 +244,11 @@ public class InicioJanela extends JFrame implements ActionListener, MouseListene
                         ProductBacklogItem pbi = new ProductBacklogItem();
                         pbi.setTipo(Tipo.PBI);
                         pbi.setTitulo(tf_Titulo.getText());
-                        pbi.setValorDeNegocio(Integer.valueOf(tf_ValorDeNegocio.getText()));
+                        try {
+                            pbi.setValorDeNegocio(Integer.valueOf(tf_ValorDeNegocio.getText()));
+                        } catch (NumberFormatException ex) {
+                            exibirMensagem("Valor de negócio inválido. Deve ser um número.");
+                        }
                         pbi.setRegistros(tarefas.get(tarefaIndice).getRegistros());
                         tarefas.set(tarefaIndice, pbi);
                         exibirMensagem("Tarefa alterada: " + pbi.toString());
@@ -252,12 +256,15 @@ public class InicioJanela extends JFrame implements ActionListener, MouseListene
                         Bug bug = new Bug();
                         bug.setTipo(Tipo.BUG);
                         bug.setTitulo(tf_Titulo.getText());
-                        bug.setGravidade(Integer.valueOf(tf_Gravidade.getText()));
+                        try {
+                            bug.setGravidade(Integer.valueOf(tf_Gravidade.getText()));
+                        } catch (NumberFormatException ex) {
+                            exibirMensagem("Gravidade deve ser um número.");
+                        }
                         bug.setRegistros(tarefas.get(tarefaIndice).getRegistros());
                         tarefas.set(tarefaIndice, bug);
                         exibirMensagem("Tarefa alterada: " + bug.toString());
                     }
-                    //cb.setSelectedItem(Tipo.PBI);
                     tf_Titulo.setText("");
                     tf_Gravidade.setText("");
                     tf_ValorDeNegocio.setText("");
@@ -269,14 +276,24 @@ public class InicioJanela extends JFrame implements ActionListener, MouseListene
                     ProductBacklogItem t = new ProductBacklogItem();
                     t.setTipo(Tipo.valueOf(cb.getSelectedItem().toString()));
                     t.setTitulo(tf_Titulo.getText());
-                    t.setValorDeNegocio(Integer.valueOf(tf_ValorDeNegocio.getText()));
+                    try {
+                        t.setValorDeNegocio(Integer.valueOf(tf_ValorDeNegocio.getText()));
+                    } catch (NumberFormatException ex) {
+                        exibirMensagem("Valor de negócio inválido. Deve ser um número.");
+                        throw ex;
+                    }
                     tarefas.add(t);
                     exibirMensagem("Tarefa criada: " + t.toString());
                 } else {
                     Bug t = new Bug();
                     t.setTipo(Tipo.valueOf(cb.getSelectedItem().toString()));
                     t.setTitulo(tf_Titulo.getText());
-                    t.setGravidade(Integer.valueOf(tf_Gravidade.getText()));
+                    try {
+                        t.setGravidade(Integer.valueOf(tf_Gravidade.getText()));
+                    } catch (NumberFormatException ex) {
+                        exibirMensagem("Gravidade deve ser um número.");
+                        throw ex;
+                    }
                     tarefas.add(t);
                     exibirMensagem("Tarefa criada: " + t.toString());
                 }
