@@ -16,17 +16,19 @@ import java.util.Timer;
 import java.util.TimerTask;
 import javax.swing.JComboBox;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 
-public class InicioJanela extends JFrame implements ActionListener {
+public class InicioJanela extends JFrame implements ActionListener, MouseListener {
 
     JPanel painelLista;
     List<Tarefa> tarefas = new ArrayList<>();
     Label minhasTarefas;
+    List<JLabel> labels = new ArrayList<>();
     List<Button[]> buttons = new ArrayList<>();
     Panel northPanel;
-    Button novaTarefa;
+    Button salvarTarefa;
     JScrollPane scrollPane;
     TextField tf_Titulo = new TextField();;
     TextField tf_Gravidade = new TextField();;
@@ -38,6 +40,8 @@ public class InicioJanela extends JFrame implements ActionListener {
     Label lbl_ValorDeNegocio_space = new Label();
     Panel topButtons = new Panel(new GridLayout(1, 2, 15, 15));
     Label lbl_buttonsSpace = new Label();
+    Panel southPanel;
+    Label mensagem = new Label();
 
     Timer timer;
     TimerTask task;
@@ -84,13 +88,17 @@ public class InicioJanela extends JFrame implements ActionListener {
         northPanel.add(tf_ValorDeNegocio);
         northPanel.add(lbl_ValorDeNegocio_space);
 
-        novaTarefa = new Button("Criar");
-        novaTarefa.addActionListener(this);
-        topButtons.add(novaTarefa);
+        salvarTarefa = new Button("Salvar");
+        salvarTarefa.addActionListener(this);
+        topButtons.add(salvarTarefa);
 
         northPanel.add(lbl_buttonsSpace);
         northPanel.add(topButtons);
         add(BorderLayout.NORTH, northPanel);
+
+        southPanel = new Panel();
+        southPanel.add(mensagem);
+        add(BorderLayout.SOUTH, southPanel);
 
         atualizarTela();
 
@@ -107,9 +115,12 @@ public class InicioJanela extends JFrame implements ActionListener {
 
         painelLista.setLayout(new GridLayout(tarefas.size(), 2));
 
+        labels = new ArrayList<>();
         for (int i = 0; i < tarefas.size(); i++) {
             Tarefa t = tarefas.get(i);
-            Label descricao = alternateBackgroundLabel(new Label(t.toString(), Label.CENTER), i);
+            JLabel descricao = alternateBackgroundLabel(new JLabel(t.toString(), JLabel.CENTER), i);
+            descricao.addMouseListener(this);
+            labels.add(descricao);
             painelLista.add(descricao);
             Panel buttonPane = new Panel(new GridLayout(1, 2));
             Button parar = new Button("Parar");
@@ -121,10 +132,10 @@ public class InicioJanela extends JFrame implements ActionListener {
                 iniciar.addActionListener(this);
                 buttonPane.add(iniciar);
             }
-            Button editar = new Button("Editar");
-            Button[] botoesTarefa = { iniciar, parar, editar };
-            editar.addActionListener(this);
-            buttonPane.add(editar);
+            Button remover = new Button("Remover");
+            Button[] botoesTarefa = { iniciar, parar, remover };
+            remover.addActionListener(this);
+            buttonPane.add(remover);
             buttons.add(i, botoesTarefa);
             painelLista.add(buttonPane);
             painelLista.setBackground(Color.WHITE);
@@ -137,7 +148,15 @@ public class InicioJanela extends JFrame implements ActionListener {
         repaint();
     }
 
-    public Label alternateBackgroundLabel(Label label, int linha) {
+    private void exibirMensagem(String msg) {
+        southPanel.remove(mensagem);
+        mensagem = new Label(msg, Label.CENTER);
+        southPanel.add(mensagem);
+        southPanel.revalidate();
+        southPanel.repaint();
+    }
+
+    public JLabel alternateBackgroundLabel(JLabel label, int linha) {
         if ((linha % 2 == 0)) {
             label.setBackground(Color.LIGHT_GRAY);
         } else {
@@ -149,20 +168,31 @@ public class InicioJanela extends JFrame implements ActionListener {
     @Override
     public void actionPerformed(ActionEvent e) {
         for (int i = 0; i < tarefas.size(); i++) {
+            if (e.getSource() == labels.get(i)) {
+                cb.setSelectedItem(tarefas.get(i).getTipo());
+                tf_Titulo.setText(tarefas.get(i).getTitulo());
+                if (tarefas.get(i).getTipo().equals(Tipo.PBI)) {
+                    ProductBacklogItem pbi = (ProductBacklogItem) tarefas.get(i);
+                    tf_ValorDeNegocio.setText(pbi.getValorDeNegocio().toString());
+                }
+                if (tarefas.get(i).getTipo().equals(Tipo.BUG)) {
+                    Bug pbi = (Bug) tarefas.get(i);
+                    tf_Gravidade.setText(pbi.getGravidade().toString());
+                }
+            }
             if (e.getSource() == buttons.get(i)[0]) {
                 if (isAlgumaTarefaEmAndamento()) {
-                    System.out.println("Já existe tarefa em andamento.");
+                    exibirMensagem("Já existe tarefa em andamento.");
                 } else {
-                    System.out.println("Iniciar tarefa " + tarefas.get(i).getTitulo());
+                    exibirMensagem("Tarefa iniciada:" + tarefas.get(i).getTitulo());
                     try {
                         tarefas.get(i).iniciar();
                         timer = new Timer();
-                        task = new MyCustomTask(tarefas.get(i).getRegistros(), i);
+                        task = new MyCustomTask(i);
                         timer.scheduleAtFixedRate(task, 0, 1000);
                         atualizarTela();
                     } catch (Exception e1) {
-                        // TODO Auto-generated catch block
-                        e1.printStackTrace();
+                        exibirMensagem(e1.getMessage());
                     }
                 }
             }
@@ -172,27 +202,72 @@ public class InicioJanela extends JFrame implements ActionListener {
                     timer.cancel();
                     atualizarTela();
                 } catch (Exception exc) {
-                    exc.printStackTrace();
+                    exibirMensagem(exc.getMessage());
                 }
-                System.out.println("Parar tarefa " + tarefas.get(i).getTitulo());
+                exibirMensagem("Tarefa interrompida: " + tarefas.get(i).getTitulo());
             }
             if (e.getSource() == buttons.get(i)[2]) {
-                System.out.println("Editar tarefa " + tarefas.get(i).getTitulo());
+                if (tarefas.get(i).isTrabalhando()) {
+                    exibirMensagem("Tarefa em andamento: " + tarefas.get(i).getTitulo());
+                } else {
+                    exibirMensagem("Tarefa removida: " + tarefas.get(i).getTitulo());
+                    tarefas.remove(i);
+                    atualizarTela();
+                }
             }
         }
-        if (e.getSource() == novaTarefa) {            
-            if (cb.getSelectedItem() == Tipo.PBI) {
-                ProductBacklogItem t = new ProductBacklogItem();
-                t.setTipo(Tipo.valueOf(cb.getSelectedItem().toString()));
-                t.setTitulo(tf_Titulo.getText());
-                t.setValorDeNegocio(Integer.valueOf(tf_ValorDeNegocio.getText()));
-                tarefas.add(t);
+        if (e.getSource() == salvarTarefa) {
+            int tarefaIndice = existeTarefa(tf_Titulo.getText());
+            if (tarefaIndice >= 0) {
+                if (tarefas.get(tarefaIndice).isTrabalhando()) {
+                    exibirMensagem("Tarefa em andamento. Pare para editar.");
+                } else {
+                    if (cb.getSelectedItem() == Tipo.PBI) {
+                        ProductBacklogItem pbi = new ProductBacklogItem();
+                        pbi.setTipo(Tipo.PBI);
+                        pbi.setTitulo(tf_Titulo.getText());
+                        pbi.setValorDeNegocio(Integer.valueOf(tf_ValorDeNegocio.getText()));
+                        pbi.setRegistros(tarefas.get(tarefaIndice).getRegistros());
+                        tarefas.set(tarefaIndice, pbi);
+                        exibirMensagem("Tarefa alterada: " + pbi.toString());
+                    } else if (cb.getSelectedItem() == Tipo.BUG) {
+                        Bug bug = new Bug();
+                        bug.setTipo(Tipo.BUG);
+                        bug.setTitulo(tf_Titulo.getText());
+                        bug.setGravidade(Integer.valueOf(tf_Gravidade.getText()));
+                        bug.setRegistros(tarefas.get(tarefaIndice).getRegistros());
+                        tarefas.set(tarefaIndice, bug);
+                        exibirMensagem("Tarefa alterada: " + bug.toString());
+                    }
+                    //cb.setSelectedItem(Tipo.PBI);
+                    tf_Titulo.setText("");
+                    tf_Gravidade.setText("");
+                    tf_ValorDeNegocio.setText("");
+                    northPanel.revalidate();
+                    northPanel.repaint();
+                }
             } else {
-                Bug t = new Bug();
-                t.setTipo(Tipo.valueOf(cb.getSelectedItem().toString()));
-                t.setTitulo(tf_Titulo.getText());
-                t.setGravidade(Integer.valueOf(tf_Gravidade.getText()));
-                tarefas.add(t);
+                if (cb.getSelectedItem() == Tipo.PBI) {
+                    ProductBacklogItem t = new ProductBacklogItem();
+                    t.setTipo(Tipo.valueOf(cb.getSelectedItem().toString()));
+                    t.setTitulo(tf_Titulo.getText());
+                    t.setValorDeNegocio(Integer.valueOf(tf_ValorDeNegocio.getText()));
+                    tarefas.add(t);
+                    exibirMensagem("Tarefa criada: " + t.toString());
+                } else {
+                    Bug t = new Bug();
+                    t.setTipo(Tipo.valueOf(cb.getSelectedItem().toString()));
+                    t.setTitulo(tf_Titulo.getText());
+                    t.setGravidade(Integer.valueOf(tf_Gravidade.getText()));
+                    tarefas.add(t);
+                    exibirMensagem("Tarefa criada: " + t.toString());
+                }
+                //cb.setSelectedItem(Tipo.PBI);
+                tf_Titulo.setText("");
+                tf_Gravidade.setText("");
+                tf_ValorDeNegocio.setText("");
+                northPanel.revalidate();
+                northPanel.repaint();
             }
             atualizarTela();
         }
@@ -221,6 +296,15 @@ public class InicioJanela extends JFrame implements ActionListener {
         }
     }
 
+    private int existeTarefa(String titulo) {
+        for (int i = 0; i < tarefas.size(); i++) {
+            if (tarefas.get(i).getTitulo().equals(titulo)) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     private boolean isAlgumaTarefaEmAndamento() {
         for (Tarefa t : tarefas) {
             if (t.isTrabalhando()) {
@@ -231,12 +315,10 @@ public class InicioJanela extends JFrame implements ActionListener {
     }
 
     class MyCustomTask extends TimerTask {
-        private List<Registro> registros;
-        private LocalDateTime inicio = LocalDateTime.now();
+        private final LocalDateTime inicio = LocalDateTime.now();
         int task;
 
-        public MyCustomTask(List<Registro> registros, int task) {
-            this.registros = registros;
+        public MyCustomTask(int task) {
             this.task = task;
         }
 
@@ -254,6 +336,48 @@ public class InicioJanela extends JFrame implements ActionListener {
             scrollPane.revalidate();
             scrollPane.repaint();
         }
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent e) {
+        for (int i = 0; i < tarefas.size(); i++) {
+            if (e.getSource() == labels.get(i)) {
+                cb.setSelectedItem(tarefas.get(i).getTipo());
+                tf_Titulo.setText(tarefas.get(i).getTitulo());
+                if (tarefas.get(i).getTipo().equals(Tipo.PBI)) {
+                    ProductBacklogItem pbi = (ProductBacklogItem) tarefas.get(i);
+                    tf_ValorDeNegocio.setText(pbi.getValorDeNegocio().toString());
+                    exibirMensagem("Consultando: " + pbi.toString());
+                }
+                if (tarefas.get(i).getTipo().equals(Tipo.BUG)) {
+                    Bug bug = (Bug) tarefas.get(i);
+                    tf_Gravidade.setText(bug.getGravidade().toString());
+                    exibirMensagem("Consultando: " + bug.toString());
+                }
+            }
+        }
+        northPanel.revalidate();
+        northPanel.repaint();
+    }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+        // do nothing
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+        // do nothing
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+        // do nothing
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+        // do nothing
     }
 
 }
