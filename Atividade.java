@@ -13,6 +13,4 @@ public enum Atividade {
         return descricao;
     }
 
-    
-
 };
