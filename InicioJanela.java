@@ -11,6 +11,7 @@ import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.InputMismatchException;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -60,12 +61,11 @@ public class InicioJanela extends JFrame implements ActionListener, MouseListene
 
     private void confirmarFechamento() {
         int resposta = JOptionPane.showConfirmDialog(
-            this,
-            "Tem certeza que deseja sair do sistema?",
-            "Confirmação de Saída",
-            JOptionPane.YES_NO_OPTION,
-            JOptionPane.QUESTION_MESSAGE
-        );
+                this,
+                "Tem certeza que deseja sair do sistema?",
+                "Confirmação de Saída",
+                JOptionPane.YES_NO_OPTION,
+                JOptionPane.QUESTION_MESSAGE);
 
         if (resposta == JOptionPane.YES_OPTION) {
             // Se o usuário clicar em SIM, o sistema encerra.
@@ -243,7 +243,12 @@ public class InicioJanela extends JFrame implements ActionListener, MouseListene
                     if (cb.getSelectedItem() == Tipo.PBI) {
                         ProductBacklogItem pbi = new ProductBacklogItem();
                         pbi.setTipo(Tipo.PBI);
-                        pbi.setTitulo(tf_Titulo.getText());
+                        try {
+                            pbi.setTitulo(tf_Titulo.getText());
+                        } catch (InputMismatchException ex) {
+                            exibirMensagem(ex.getMessage());
+                            throw ex;
+                        }
                         try {
                             pbi.setValorDeNegocio(Integer.valueOf(tf_ValorDeNegocio.getText()));
                         } catch (NumberFormatException ex) {
@@ -255,7 +260,12 @@ public class InicioJanela extends JFrame implements ActionListener, MouseListene
                     } else if (cb.getSelectedItem() == Tipo.BUG) {
                         Bug bug = new Bug();
                         bug.setTipo(Tipo.BUG);
-                        bug.setTitulo(tf_Titulo.getText());
+                        try {
+                            bug.setTitulo(tf_Titulo.getText());
+                        } catch (InputMismatchException ex) {
+                            exibirMensagem(ex.getMessage());
+                            throw ex;
+                        }
                         try {
                             bug.setGravidade(Integer.valueOf(tf_Gravidade.getText()));
                         } catch (NumberFormatException ex) {
@@ -275,7 +285,12 @@ public class InicioJanela extends JFrame implements ActionListener, MouseListene
                 if (cb.getSelectedItem() == Tipo.PBI) {
                     ProductBacklogItem t = new ProductBacklogItem();
                     t.setTipo(Tipo.valueOf(cb.getSelectedItem().toString()));
-                    t.setTitulo(tf_Titulo.getText());
+                    try {
+                        t.setTitulo(tf_Titulo.getText());
+                    } catch (InputMismatchException ex) {
+                        exibirMensagem(ex.getMessage());
+                        throw ex;
+                    }
                     try {
                         t.setValorDeNegocio(Integer.valueOf(tf_ValorDeNegocio.getText()));
                     } catch (NumberFormatException ex) {
@@ -287,7 +302,12 @@ public class InicioJanela extends JFrame implements ActionListener, MouseListene
                 } else {
                     Bug t = new Bug();
                     t.setTipo(Tipo.valueOf(cb.getSelectedItem().toString()));
-                    t.setTitulo(tf_Titulo.getText());
+                    try {
+                        t.setTitulo(tf_Titulo.getText());
+                    } catch (InputMismatchException ex) {
+                        exibirMensagem(ex.getMessage());
+                        throw ex;
+                    }
                     try {
                         t.setGravidade(Integer.valueOf(tf_Gravidade.getText()));
                     } catch (NumberFormatException ex) {
@@ -297,7 +317,7 @@ public class InicioJanela extends JFrame implements ActionListener, MouseListene
                     tarefas.add(t);
                     exibirMensagem("Tarefa criada: " + t.toString());
                 }
-                //cb.setSelectedItem(Tipo.PBI);
+                // cb.setSelectedItem(Tipo.PBI);
                 tf_Titulo.setText("");
                 tf_Gravidade.setText("");
                 tf_ValorDeNegocio.setText("");

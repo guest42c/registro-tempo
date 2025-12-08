@@ -1,5 +1,6 @@
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.InputMismatchException;
 import java.util.List;
 
 public class Tarefa {
@@ -58,6 +59,9 @@ public class Tarefa {
     }
 
     public void setTitulo(String titulo) {
+        if (titulo == null || titulo.isBlank()) {
+            throw new InputMismatchException("Titulo não pode ser vazio.");
+        }
         this.titulo = titulo;
     }
 
